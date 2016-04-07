@@ -1,0 +1,21 @@
+{
+    "name": "sadapon2008/cakephp-aws-ses-tranport",
+    "type": "cakephp-plugin",
+    "require": {
+        "aws/aws-sdk-php": "~3.0",
+        "cakephp/cakephp": "~2.6"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "~3.7"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Tsuyoshi Sadakata",
+            "email": "sadapon2008@gmail.com"
+        }
+    ],
+    "extra": {
+        "installer-name": "AwsSesTransport"
+    }
+}
