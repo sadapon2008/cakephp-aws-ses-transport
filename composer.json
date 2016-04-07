@@ -1,5 +1,5 @@
 {
-    "name": "sadapon2008/cakephp-aws-ses-tranport",
+    "name": "sadapon2008/cakephp-aws-ses-transport",
     "type": "cakephp-plugin",
     "require": {
         "aws/aws-sdk-php": "~3.0",
