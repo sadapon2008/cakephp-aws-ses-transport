@@ -61,20 +61,35 @@ class AwsSesTransport extends AbstractTransport
 
     /**
      * @throws \InvalidArgumentException
+     * @throws SocketException
      */
     public function getSendQuota() {
-        $this->_lastResponse = array();
+        $this->_lastResponse = null;
         $this->generateSes();
         $result = $this->ses->getSendQuota();
+        if(empty($result)) {
+            throw new SocketException();
+        }
         $this->_lastResponse = $result;
+        $results = $result->toArray();
+        if(!isset($results['@metadata']['statusCode']) || ($results['@metadata']['statusCode'] != 200)) {
+            throw new SocketException();
+        }
+
+        return array(
+            'max24HourSend' => $results['Max24HourSend'],
+            'maxSendRate' => $results['MaxSendRate'],
+            'sentLast24Hours' => $results['SentLast24Hours'],
+        );
     }
 
     /**
      * @param CakeEmail $email
      * @throws \InvalidArgumentException
+     * @throws SocketException
      */
     public function send(CakeEmail $email) {
-        $this->_lastResponse = array();
+        $this->_lastResponse = null;
         $this->generateSes();
         $headers = $this->_headersToString($email->getHeaders(array('from', 'sender', 'replyTo', 'readReceipt', 'returnPath', 'to', 'cc', 'subject')));
         $message = implode("\r\n", (array)$email->message());
@@ -87,9 +102,17 @@ class AwsSesTransport extends AbstractTransport
             ),
         );
         $result = $this->ses->sendRawEmail($options);
+        if(empty($result)) {
+            throw new SocketException();
+        }
 
         $this->_lastResponse = $result;
 
-        return array('headers' => $headers, 'message' => $message);
+        $results = $result->toArray();
+        if(!isset($results['@metadata']['statusCode']) || ($results['@metadata']['statusCode'] != 200)) {
+            throw new SocketException();
+        }
+
+        return array('headers' => $headers, 'message' => $message, 'messageId' => $results['MessageId']);
     }
 }
