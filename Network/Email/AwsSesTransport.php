@@ -1,12 +1,22 @@
 <?php
 
-App::uses('SmtpTransport', 'Network/Email');
+App::uses('AbstractTransport', 'Network/Email');
 
-class AwsSesTransport extends SmtpTransport
+/**
+ * Class AwsSesTransport
+ */
+class AwsSesTransport extends AbstractTransport
 {
     /** @var Aws\Ses\SesClient */
     protected $ses = null;
 
+    /** @var Aws\Result */
+    protected $_lastResponse = null;
+
+    /**
+     * @param array|null $config
+     * @return array
+     */
     public function config($config = null) {
         if ($config === null) {
             return $this->_config;
@@ -45,6 +55,10 @@ class AwsSesTransport extends SmtpTransport
         $this->ses = null;
     }
 
+    public function getLastResponse() {
+        return $this->_lastResponse;
+    }
+
     /**
      * @throws \InvalidArgumentException
      */
@@ -60,18 +74,10 @@ class AwsSesTransport extends SmtpTransport
      * @throws \InvalidArgumentException
      */
     public function send(CakeEmail $email) {
-        $this->_cakeEmail = $email;
-        $this->generateSes();
-        $this->_sendData();
-
-        return $this->_content;
-    }
-
-    protected function _sendData()
-    {
         $this->_lastResponse = array();
-        $headers = $this->_headersToString($this->_prepareMessageHeaders());
-        $message = $this->_prepareMessage();
+        $this->generateSes();
+        $headers = $this->_headersToString($email->getHeaders(array('from', 'sender', 'replyTo', 'readReceipt', 'returnPath', 'to', 'cc', 'subject')));
+        $message = implode("\r\n", (array)$email->message());
 
         $rawData = $headers . "\r\n\r\n" . $message;
 
@@ -81,8 +87,9 @@ class AwsSesTransport extends SmtpTransport
             ),
         );
         $result = $this->ses->sendRawEmail($options);
+
         $this->_lastResponse = $result;
 
-        $this->_content = array('headers' => $headers, 'message' => $message);
+        return array('headers' => $headers, 'message' => $message);
     }
 }
